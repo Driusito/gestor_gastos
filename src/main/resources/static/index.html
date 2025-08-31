@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor de Gastos</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; margin: 0; padding: 0; font-size: 14px;}
+    header { background: #2c3e50; color: #fff; padding: 10px; text-align: center; font-size: 18px;}
+    .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; padding: 12px;}
+    .card { background: #fff; padding: 12px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08);}
+    .card h3 { margin: 6px 0; text-align: center; font-size: 15px;}
+    .expense { color: #ff5733; text-align: center; font-weight: bold; font-size: 16px;}
+    .chart-container { max-width: 350px; margin: 0 auto;}
+    canvas { margin-top: 8px; max-width: 100%; height: 200px !important;}
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px;}
+    th, td { border: 1px solid #ddd; padding: 6px; text-align: center;}
+    th { background: #2c3e50; color: white; font-size: 13px;}
+    .btn { border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; color: #fff; font-size: 12px;}
+    .btn-delete { background: #e74c3c; }
+    .btn-delete:hover { background: #c0392b; }
+    .btn-edit { background: #3498db; }
+    .btn-edit:hover { background: #2980b9; }
+    form { display: flex; flex-direction: column; gap: 6px; max-width: 350px; margin: 0 auto; font-size: 13px;}
+    input, select, button { padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;}
+    button { background: #2c3e50; color: #fff; cursor: pointer;}
+    button:hover { background: #34495e; }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 10px; font-size: 13px;}
+    .filters input, .filters select { font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gestor de Gastos</h1>
+  </header>
+
+  <section class="dashboard">
+    <div class="card expense">
+      <h3>Total Gastos</h3>
+      <p id="total-gastos">$0.00</p>
+    </div>
+    <div class="card">
+      <h3>Distribución</h3>
+      <div class="chart-container">
+        <canvas id="gastosChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <section class="dashboard">
+    <div class="card" style="grid-column: span 2;">
+      <h3>Últimos Gastos</h3>
+
+      <!-- Filtros -->
+      <div class="filters">
+        <select id="filtro-categoria">
+          <option value="">Todas las categorías</option>
+          <option value="Alimentación">🍔 Alimentación</option>
+          <option value="Transporte">🚌 Transporte</option>
+          <option value="Ocio">🎮 Ocio</option>
+          <option value="Salud">💊 Salud</option>
+          <option value="Educación">📚 Educación</option>
+          <option value="Otros">📦 Otros</option>
+        </select>
+        <input type="date" id="filtro-fecha-inicio">
+        <input type="date" id="filtro-fecha-fin">
+        <button onclick="aplicarFiltros()">🔍 Filtrar</button>
+        <button onclick="limpiarFiltros()">❌ Limpiar</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th>Categoría</th>
+            <th>Monto</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-gastos"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="dashboard">
+    <div class="card" style="grid-column: span 2;">
+      <h3 id="form-title">Agregar Nuevo Gasto</h3>
+      <form id="form-gasto">
+        <input type="text" id="descripcion" placeholder="Descripción" required>
+        <input type="number" id="monto" placeholder="Monto" step="0.01" required>
+        <select id="categoria" required>
+          <option value="" disabled selected>Selecciona una categoría</option>
+          <option value="Alimentación">🍔 Alimentación</option>
+          <option value="Transporte">🚌 Transporte</option>
+          <option value="Ocio">🎮 Ocio</option>
+          <option value="Salud">💊 Salud</option>
+          <option value="Educación">📚 Educación</option>
+          <option value="Otros">📦 Otros</option>
+        </select>
+        <input type="date" id="fecha" required>
+        <button type="submit" id="btn-submit">Guardar Gasto</button>
+      </form>
+    </div>
+  </section>  
+
+  <script>
+    const API_URL = "http://localhost:8080/api/v1/gastos";
+    let chartInstance;
+    let gastoEditando = null;
+    let gastosGlobal = [];
+
+    async function cargarGastos() {
+      try {
+        const response = await fetch(API_URL);
+        gastosGlobal = await response.json();
+        renderizarGastos(gastosGlobal);
+      } catch (error) {
+        console.error("Error cargando gastos:", error);
+      }
+    }
+
+    function renderizarGastos(gastos) {
+      const total = gastos.reduce((acc, g) => acc + g.monto, 0);
+      document.getElementById("total-gastos").textContent = `$${total.toFixed(2)}`;
+
+      const tabla = document.getElementById("tabla-gastos");
+      tabla.innerHTML = "";
+      gastos.slice(-5).forEach(gasto => {
+        const fila = `<tr>
+          <td>${gasto.descripcion}</td>
+          <td>${gasto.categoria}</td>
+          <td>$${gasto.monto.toFixed(2)}</td>
+          <td>${gasto.fecha}</td>
+          <td>
+            <button class="btn btn-edit" onclick="editarGasto(${gasto.id}, '${gasto.descripcion}', ${gasto.monto}, '${gasto.categoria}', '${gasto.fecha}')">✏️ Editar</button>
+            <button class="btn btn-delete" onclick="eliminarGasto(${gasto.id})">🗑️ Eliminar</button>
+          </td>
+        </tr>`;
+        tabla.innerHTML += fila;
+      });
+
+      const categorias = {};
+      gastos.forEach(g => {
+        categorias[g.categoria] = (categorias[g.categoria] || 0) + g.monto;
+      });
+
+      const ctx = document.getElementById("gastosChart").getContext("2d");
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: Object.keys(categorias),
+          datasets: [{
+            label: "Gastos por categoría",
+            data: Object.values(categorias),
+            backgroundColor: ["#ff5733", "#28a745", "#007bff", "#e74c3c", "#f39c12", "#8e44ad"]
+          }]
+        }
+      });
+    }
+
+    function aplicarFiltros() {
+      const categoria = document.getElementById("filtro-categoria").value;
+      const inicio = document.getElementById("filtro-fecha-inicio").value;
+      const fin = document.getElementById("filtro-fecha-fin").value;
+
+      let filtrados = gastosGlobal;
+
+      if (categoria) {
+        filtrados = filtrados.filter(g => g.categoria === categoria);
+      }
+      if (inicio) {
+        filtrados = filtrados.filter(g => g.fecha >= inicio);
+      }
+      if (fin) {
+        filtrados = filtrados.filter(g => g.fecha <= fin);
+      }
+
+      renderizarGastos(filtrados);
+    }
+
+    function limpiarFiltros() {
+      document.getElementById("filtro-categoria").value = "";
+      document.getElementById("filtro-fecha-inicio").value = "";
+      document.getElementById("filtro-fecha-fin").value = "";
+      renderizarGastos(gastosGlobal);
+    }
+
+    async function eliminarGasto(id) {
+      if (confirm("¿Seguro que deseas eliminar este gasto?")) {
+        try {
+          await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+          await cargarGastos();
+        } catch (error) {
+          console.error("Error eliminando gasto:", error);
+        }
+      }
+    }
+
+    function editarGasto(id, descripcion, monto, categoria, fecha) {
+      gastoEditando = id;
+      document.getElementById("form-title").textContent = "Editar Gasto";
+      document.getElementById("btn-submit").textContent = "Actualizar Gasto";
+
+      document.getElementById("descripcion").value = descripcion;
+      document.getElementById("monto").value = monto;
+      document.getElementById("categoria").value = categoria;
+      document.getElementById("fecha").value = fecha;
+    }
+
+    document.getElementById("form-gasto").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nuevoGasto = {
+        descripcion: document.getElementById("descripcion").value,
+        monto: parseFloat(document.getElementById("monto").value),
+        categoria: document.getElementById("categoria").value,
+        fecha: document.getElementById("fecha").value
+      };
+
+      try {
+        if (gastoEditando) {
+          await fetch(`${API_URL}/${gastoEditando}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(nuevoGasto)
+          });
+          gastoEditando = null;
+          document.getElementById("form-title").textContent = "Agregar Nuevo Gasto";
+          document.getElementById("btn-submit").textContent = "Guardar Gasto";
+        } else {
+          await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(nuevoGasto)
+          });
+        }
+        cargarGastos();
+        e.target.reset();
+      } catch (error) {
+        console.error("Error guardando/actualizando gasto:", error);
+      }
+    });
+
+    cargarGastos();
+  </script>
+</body>
+</html>
