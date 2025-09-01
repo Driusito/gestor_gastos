@@ -229,10 +229,25 @@
       </form>
     </div>
   </section>
+
   <div style="margin-top:20px;">
     <button onclick="exportarExcel()" class="btn btn-success">📊 Exportar a Excel</button>
     <button onclick="exportarCSV()" class="btn btn-primary">📑 Exportar a CSV</button>
   </div>
+
+  <div style="margin-top:20px;">
+    <h3>📥 Importar gastos</h3>
+    <form id="formImportarExcel" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xlsx" required>
+        <button type="submit" class="btn btn-success">Importar Excel</button>
+    </form>
+
+    <form id="formImportarCSV" enctype="multipart/form-data" style="margin-top:10px;">
+        <input type="file" name="file" accept=".csv" required>
+        <button type="submit" class="btn btn-primary">Importar CSV</button>
+    </form>
+</div>
+
 
 
 
@@ -383,6 +398,36 @@
     function exportarCSV() {
       window.location.href = "http://localhost:8080/api/v1/gastos/export/csv";
     }
+
+    document.getElementById("formImportarExcel").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    try {
+        const response = await fetch("http://localhost:8080/api/v1/gastos/import/excel", {
+            method: "POST",
+            body: formData
+        });
+        alert(await response.text());
+        cargarGastos(); // refresca tabla y gráfica
+    } catch (error) {
+        alert("Error al importar Excel: " + error);
+    }
+});
+
+document.getElementById("formImportarCSV").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    try {
+        const response = await fetch("http://localhost:8080/api/v1/gastos/import/csv", {
+            method: "POST",
+            body: formData
+        });
+        alert(await response.text());
+        cargarGastos();
+    } catch (error) {
+        alert("Error al importar CSV: " + error);
+    }
+});
 
 
   </script>

@@ -1,7 +1,11 @@
 package com.example.gestor_gastos.gestor_gastos.controller;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +17,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.gestor_gastos.gestor_gastos.model.Gasto;
 import com.example.gestor_gastos.gestor_gastos.service.GastoService;
@@ -97,29 +102,88 @@ public class GastoController {
         workbook.write(response.getOutputStream());
         workbook.close();
     }
+
     @GetMapping("/export/csv")
-public void exportToCSV(HttpServletResponse response) throws IOException {
-    response.setContentType("text/csv");
-    String headerKey = "Content-Disposition";
-    String headerValue = "attachment; filename=gastos.csv";
-    response.setHeader(headerKey, headerValue);
+    public void exportToCSV(HttpServletResponse response) throws IOException {
+        response.setContentType("text/csv");
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=gastos.csv";
+        response.setHeader(headerKey, headerValue);
 
-    List<Gasto> listaGastos = gastoService.getAllGastos();
+        List<Gasto> listaGastos = gastoService.getAllGastos();
 
-    PrintWriter writer = response.getWriter();
-    writer.println("Descripción,Monto,Categoría,Fecha");
+        PrintWriter writer = response.getWriter();
+        writer.println("Descripción,Monto,Categoría,Fecha");
 
-    for (Gasto gasto : listaGastos) {
-        writer.println(            
-            gasto.getDescripcion() + "," +
-            gasto.getMonto() + "," +
-            gasto.getCategoria() + "," +
-            gasto.getFecha()
-        );
+        for (Gasto gasto : listaGastos) {
+            writer.println(
+                    gasto.getDescripcion() + "," +
+                            gasto.getMonto() + "," +
+                            gasto.getCategoria() + "," +
+                            gasto.getFecha());
+        }
+
+        writer.flush();
+        writer.close();
     }
 
-    writer.flush();
-    writer.close();
+    @PostMapping("/import/excel")
+public ResponseEntity<String> importExcel(@RequestParam("file") MultipartFile file) {
+    if (file.isEmpty()) {
+        return ResponseEntity.badRequest().body("El archivo está vacío");
+    }
+    try (InputStream inputStream = file.getInputStream();
+         Workbook workbook = new XSSFWorkbook(inputStream)) {
+
+        Sheet sheet = workbook.getSheetAt(0);
+        for (int i = 1; i <= sheet.getLastRowNum(); i++) { // saltamos cabecera
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+
+            Gasto gasto = new Gasto();
+            gasto.setDescripcion(row.getCell(1).getStringCellValue());  // ahora columna 0
+            gasto.setMonto(row.getCell(2).getNumericCellValue());       // ahora columna 1
+            gasto.setCategoria(row.getCell(3).getStringCellValue());    // ahora columna 2
+            gasto.setFecha(LocalDate.parse(row.getCell(4).getStringCellValue())); // ahora columna 3
+
+            gastoService.saveGasto(gasto);
+        }
+        return ResponseEntity.ok("Archivo Excel importado correctamente");
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().body("Error al importar: " + e.getMessage());
+    }
+}
+
+
+    @PostMapping("/import/csv")
+public ResponseEntity<String> importCSV(@RequestParam("file") MultipartFile file) {
+    if (file.isEmpty()) {
+        return ResponseEntity.badRequest().body("El archivo está vacío");
+    }
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+        String line;
+        boolean firstLine = true;
+        while ((line = br.readLine()) != null) {
+            if (firstLine) { // saltar cabecera
+                firstLine = false;
+                continue;
+            }
+            String[] fields = line.split(",");
+
+            if (fields.length < 4) continue; // seguridad
+
+            Gasto gasto = new Gasto();
+            gasto.setDescripcion(fields[0].trim());
+            gasto.setMonto(Double.parseDouble(fields[1].trim()));
+            gasto.setCategoria(fields[2].trim());
+            gasto.setFecha(LocalDate.parse(fields[3].trim())); // formato yyyy-MM-dd
+
+            gastoService.saveGasto(gasto);
+        }
+        return ResponseEntity.ok("Archivo CSV importado correctamente");
+    } catch (Exception e) {
+        return ResponseEntity.internalServerError().body("Error al importar: " + e.getMessage());
+    }
 }
 
 
