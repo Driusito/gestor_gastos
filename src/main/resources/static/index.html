@@ -171,6 +171,18 @@
         <canvas id="gastosChart"></canvas>
       </div>
     </div>
+    <div class="card" style="grid-column: span 2;">
+      <h3>Gastos por Categoría</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Categoría</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-categorias"></tbody>
+      </table>
+    </div>
   </section>
 
   <section class="dashboard">
@@ -238,18 +250,15 @@
   <div style="margin-top:20px;">
     <h3>📥 Importar gastos</h3>
     <form id="formImportarExcel" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".xlsx" required>
-        <button type="submit" class="btn btn-success">Importar Excel</button>
+      <input type="file" name="file" accept=".xlsx" required>
+      <button type="submit" class="btn btn-success">Importar Excel</button>
     </form>
 
     <form id="formImportarCSV" enctype="multipart/form-data" style="margin-top:10px;">
-        <input type="file" name="file" accept=".csv" required>
-        <button type="submit" class="btn btn-primary">Importar CSV</button>
+      <input type="file" name="file" accept=".csv" required>
+      <button type="submit" class="btn btn-primary">Importar CSV</button>
     </form>
-</div>
-
-
-
+  </div>
 
   <script>
     const API_URL = "http://localhost:8080/api/v1/gastos";
@@ -301,9 +310,29 @@
           datasets: [{
             label: "Gastos por categoría",
             data: Object.values(categorias),
-            backgroundColor: ["#ff5733", "#28a745", "#007bff", "#e74c3c", "#f39c12", "#8e44ad"]
+            backgroundColor: [
+              "#1abc9c", 
+              "#e67e22", 
+              "#3498db", 
+              "#9b59b6", 
+              "#f1c40f",
+              "#e74c3c",
+              "#2ecc71", 
+              "#34495e"  
+            ]
           }]
         }
+      });
+
+      // Llenar tabla de gastos por categoría
+      const tablaCategorias = document.getElementById("tabla-categorias");
+      tablaCategorias.innerHTML = "";
+      Object.entries(categorias).forEach(([cat, monto]) => {
+        const fila = `<tr>
+          <td>${cat}</td>
+          <td>$${monto.toFixed(2)}</td>
+        </tr>`;
+        tablaCategorias.innerHTML += fila;
       });
     }
 
@@ -399,37 +428,35 @@
       window.location.href = "http://localhost:8080/api/v1/gastos/export/csv";
     }
 
-    document.getElementById("formImportarExcel").addEventListener("submit", async function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    try {
+    document.getElementById("formImportarExcel").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      try {
         const response = await fetch("http://localhost:8080/api/v1/gastos/import/excel", {
-            method: "POST",
-            body: formData
+          method: "POST",
+          body: formData
         });
         alert(await response.text());
         cargarGastos(); // refresca tabla y gráfica
-    } catch (error) {
+      } catch (error) {
         alert("Error al importar Excel: " + error);
-    }
-});
+      }
+    });
 
-document.getElementById("formImportarCSV").addEventListener("submit", async function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    try {
+    document.getElementById("formImportarCSV").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      try {
         const response = await fetch("http://localhost:8080/api/v1/gastos/import/csv", {
-            method: "POST",
-            body: formData
+          method: "POST",
+          body: formData
         });
         alert(await response.text());
         cargarGastos();
-    } catch (error) {
+      } catch (error) {
         alert("Error al importar CSV: " + error);
-    }
-});
-
-
+      }
+    });
   </script>
 </body>
 

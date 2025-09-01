@@ -93,10 +93,10 @@ public class GastoController {
         int rowIdx = 1;
         for (Gasto gasto : listaGastos) {
             Row row = sheet.createRow(rowIdx++);
-            row.createCell(1).setCellValue(gasto.getDescripcion());
-            row.createCell(2).setCellValue(gasto.getMonto());
-            row.createCell(3).setCellValue(gasto.getCategoria());
-            row.createCell(4).setCellValue(gasto.getFecha().toString());
+            row.createCell(0).setCellValue(gasto.getDescripcion());
+            row.createCell(1).setCellValue(gasto.getMonto());
+            row.createCell(2).setCellValue(gasto.getCategoria());
+            row.createCell(3).setCellValue(gasto.getFecha().toString());
         }
 
         workbook.write(response.getOutputStream());
