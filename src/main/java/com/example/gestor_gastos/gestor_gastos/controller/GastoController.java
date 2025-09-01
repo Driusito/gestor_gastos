@@ -141,10 +141,10 @@ public ResponseEntity<String> importExcel(@RequestParam("file") MultipartFile fi
             if (row == null) continue;
 
             Gasto gasto = new Gasto();
-            gasto.setDescripcion(row.getCell(1).getStringCellValue());  // ahora columna 0
-            gasto.setMonto(row.getCell(2).getNumericCellValue());       // ahora columna 1
-            gasto.setCategoria(row.getCell(3).getStringCellValue());    // ahora columna 2
-            gasto.setFecha(LocalDate.parse(row.getCell(4).getStringCellValue())); // ahora columna 3
+            gasto.setDescripcion(row.getCell(0).getStringCellValue());  // ahora columna 0
+            gasto.setMonto(row.getCell(1).getNumericCellValue());       // ahora columna 1
+            gasto.setCategoria(row.getCell(2).getStringCellValue());    // ahora columna 2
+            gasto.setFecha(LocalDate.parse(row.getCell(3).getStringCellValue())); // ahora columna 3
 
             gastoService.saveGasto(gasto);
         }

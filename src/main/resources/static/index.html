@@ -7,91 +7,130 @@
   <title>Gestor de Gastos</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f7fa;
+    /* Reset y tipografía */
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f2f5;
+      color: #333;
       font-size: 14px;
     }
 
+    /* Header */
     header {
-      background: #2c3e50;
+      background: linear-gradient(90deg, #4e73df, #1cc88a);
       color: #fff;
-      padding: 10px;
+      padding: 20px;
       text-align: center;
-      font-size: 18px;
+      font-size: 20px;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
 
+    /* Dashboard general */
     .dashboard {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      padding: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 20px;
     }
 
+    /* Tarjetas */
     .card {
       background: #fff;
-      padding: 12px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease;
     }
+   
+    
 
     .card h3 {
-      margin: 6px 0;
+      margin-bottom: 12px;
+      font-size: 16px;
+      color: #4e73df;
       text-align: center;
-      font-size: 15px;
     }
 
     .expense {
-      color: #ff5733;
-      text-align: center;
-      font-weight: bold;
-      font-size: 16px;
-    }
+  background:white;       
+  color: #e74c3c;           
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  padding: 16px;            
+  border-radius: 8px;        
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
 
-    .chart-container {
-      max-width: 350px;
-      margin: 0 auto;
-    }
+
+.chart-container {
+  max-width: 350px;         
+  width: 100%;              
+  margin: 0 auto;           
+  display: flex;            
+  justify-content: center; 
+}
+
 
     canvas {
-      margin-top: 8px;
+      margin-top: 12px;
       max-width: 100%;
-      height: 200px !important;
+      height: 220px !important;
     }
 
+    /* Tablas */
     table {
       width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-      font-size: 13px;
+      border-collapse: separate;
+      border-spacing: 10 6px;
+      margin-top: 12px;
+      font-size: 14px;
     }
 
     th,
     td {
-      border: 1px solid #ddd;
-      padding: 6px;
+      padding: 10px 12px;
       text-align: center;
     }
 
-    th {
-      background: #2c3e50;
+    th {margin: 12px;
+      background: #4e73df;
       color: white;
-      font-size: 13px;
+      font-weight: 500;
+      
     }
 
+    td {
+      background: #f9f9f9;
+      border-radius: 6px;
+    }
+
+    /* Botones */
     .btn {
       border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: 6px 12px;
+      border-radius: 6px;
       cursor: pointer;
-      color: #fff;
-      font-size: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.2s ease;
+      margin: 2px;
     }
 
     .btn-delete {
       background: #e74c3c;
+      color: #fff;
     }
 
     .btn-delete:hover {
@@ -99,59 +138,87 @@
     }
 
     .btn-edit {
-      background: #3498db;
+      background: #1cc88a;
+      color: #fff;
     }
 
     .btn-edit:hover {
-      background: #2980b9;
+      background: #17a673;
     }
 
+    .btn-success {
+      background-color: #4e73df;
+      color: #fff;
+      margin: 12px 0;
+    }
+
+    .btn-success:hover {
+      background-color: #2e59d9;
+    }
+
+    .btn-primary {
+      background-color: #1cc88a;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background-color: #17a673;
+    }
+
+    /* Formularios */
     form {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      max-width: 350px;
+      gap: 10px;
+      max-width: 400px;
       margin: 0 auto;
-      font-size: 13px;
+      font-size: 14px;
     }
 
     input,
     select,
     button {
-      padding: 6px;
+      padding: 10px;
       border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 13px;
+      border-radius: 8px;
+      font-size: 14px;
     }
 
     button {
-      background: #2c3e50;
+      background: #4e73df;
       color: #fff;
+      font-weight: 500;
       cursor: pointer;
     }
 
     button:hover {
-      background: #34495e;
+      background: #2e59d9;
     }
 
+    /* Filtros */
     .filters {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
       justify-content: center;
-      margin-bottom: 10px;
-      font-size: 13px;
+      margin-bottom: 15px;
+      font-size: 14px;
     }
 
     .filters input,
     .filters select {
-      font-size: 13px;
+      font-size: 14px;
     }
 
-    .btn-success {
-      background-color: #28a745;
-      margin: 12px;
+    /* Sección de export/import */
+    .import-export {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
     }
+
   </style>
 </head>
 
@@ -163,7 +230,7 @@
   <section class="dashboard">
     <div class="card expense">
       <h3>Total Gastos</h3>
-      <p id="total-gastos">$0.00</p>
+      <p id="total-gastos">0.00€</p>
     </div>
     <div class="card">
       <h3>Distribución</h3>
@@ -211,7 +278,7 @@
           <tr>
             <th>Descripción</th>
             <th>Categoría</th>
-            <th>Monto</th>
+            <th>Cantidad</th>
             <th>Fecha</th>
             <th>Acciones</th>
           </tr>
@@ -226,7 +293,7 @@
       <h3 id="form-title">Agregar Nuevo Gasto</h3>
       <form id="form-gasto">
         <input type="text" id="descripcion" placeholder="Descripción" required>
-        <input type="number" id="monto" placeholder="Monto" step="0.01" required>
+        <input type="number" id="monto" placeholder="Cantidad" step="0.01" required>
         <select id="categoria" required>
           <option value="" disabled selected>Selecciona una categoría</option>
           <option value="Alimentación">🍔 Alimentación</option>
@@ -242,19 +309,17 @@
     </div>
   </section>
 
-  <div style="margin-top:20px;">
+  <div class="import-export">
     <button onclick="exportarExcel()" class="btn btn-success">📊 Exportar a Excel</button>
     <button onclick="exportarCSV()" class="btn btn-primary">📑 Exportar a CSV</button>
-  </div>
 
-  <div style="margin-top:20px;">
     <h3>📥 Importar gastos</h3>
     <form id="formImportarExcel" enctype="multipart/form-data">
       <input type="file" name="file" accept=".xlsx" required>
       <button type="submit" class="btn btn-success">Importar Excel</button>
     </form>
 
-    <form id="formImportarCSV" enctype="multipart/form-data" style="margin-top:10px;">
+    <form id="formImportarCSV" enctype="multipart/form-data">
       <input type="file" name="file" accept=".csv" required>
       <button type="submit" class="btn btn-primary">Importar CSV</button>
     </form>
@@ -278,7 +343,7 @@
 
     function renderizarGastos(gastos) {
       const total = gastos.reduce((acc, g) => acc + g.monto, 0);
-      document.getElementById("total-gastos").textContent = `$${total.toFixed(2)}`;
+      document.getElementById("total-gastos").textContent = `${total.toFixed(2)}€`;
 
       const tabla = document.getElementById("tabla-gastos");
       tabla.innerHTML = "";
@@ -286,7 +351,7 @@
         const fila = `<tr>
           <td>${gasto.descripcion}</td>
           <td>${gasto.categoria}</td>
-          <td>$${gasto.monto.toFixed(2)}</td>
+          <td>${gasto.monto.toFixed(2)}€</td>
           <td>${gasto.fecha}</td>
           <td>
             <button class="btn btn-edit" onclick="editarGasto(${gasto.id}, '${gasto.descripcion}', ${gasto.monto}, '${gasto.categoria}', '${gasto.fecha}')">✏️ Editar</button>
@@ -324,13 +389,12 @@
         }
       });
 
-      // Llenar tabla de gastos por categoría
       const tablaCategorias = document.getElementById("tabla-categorias");
       tablaCategorias.innerHTML = "";
       Object.entries(categorias).forEach(([cat, monto]) => {
         const fila = `<tr>
           <td>${cat}</td>
-          <td>$${monto.toFixed(2)}</td>
+          <td>${monto.toFixed(2)}€</td>
         </tr>`;
         tablaCategorias.innerHTML += fila;
       });
