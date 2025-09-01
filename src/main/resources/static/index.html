@@ -21,7 +21,6 @@
       font-size: 14px;
     }
 
-    /* Header */
     header {
       background: linear-gradient(90deg, #4e73df, #1cc88a);
       color: #fff;
@@ -32,7 +31,6 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
 
-    /* Dashboard general */
     .dashboard {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -40,7 +38,6 @@
       padding: 20px;
     }
 
-    /* Tarjetas */
     .card {
       background: #fff;
       padding: 20px;
@@ -48,8 +45,6 @@
       box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
       transition: transform 0.2s ease;
     }
-   
-    
 
     .card h3 {
       margin-bottom: 12px;
@@ -59,29 +54,27 @@
     }
 
     .expense {
-  background:white;       
-  color: #e74c3c;           
-  font-size: 18px;
-  font-weight: bold;
-  text-align: center;
-  padding: 16px;            
-  border-radius: 8px;        
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
+      background: white;
+      color: #e74c3c;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
 
-
-.chart-container {
-  max-width: 350px;         
-  width: 100%;              
-  margin: 0 auto;           
-  display: flex;            
-  justify-content: center; 
-}
-
+    .chart-container {
+      max-width: 350px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+    }
 
     canvas {
       margin-top: 12px;
@@ -89,7 +82,6 @@
       height: 220px !important;
     }
 
-    /* Tablas */
     table {
       width: 100%;
       border-collapse: separate;
@@ -104,11 +96,11 @@
       text-align: center;
     }
 
-    th {margin: 12px;
+    th {
+      margin: 12px;
       background: #4e73df;
       color: white;
       font-weight: 500;
-      
     }
 
     td {
@@ -116,7 +108,6 @@
       border-radius: 6px;
     }
 
-    /* Botones */
     .btn {
       border: none;
       padding: 6px 12px;
@@ -128,14 +119,7 @@
       margin: 2px;
     }
 
-    .btn-delete {
-      background: #e74c3c;
-      color: #fff;
-    }
-
-    .btn-delete:hover {
-      background: #c0392b;
-    }
+    
 
     .btn-edit {
       background: #1cc88a;
@@ -165,7 +149,6 @@
       background-color: #17a673;
     }
 
-    /* Formularios */
     form {
       display: flex;
       flex-direction: column;
@@ -195,7 +178,6 @@
       background: #2e59d9;
     }
 
-    /* Filtros */
     .filters {
       display: flex;
       flex-wrap: wrap;
@@ -210,7 +192,6 @@
       font-size: 14px;
     }
 
-    /* Sección de export/import */
     .import-export {
       display: flex;
       flex-direction: column;
@@ -218,7 +199,6 @@
       gap: 12px;
       margin: 20px 0;
     }
-
   </style>
 </head>
 
@@ -285,6 +265,9 @@
         </thead>
         <tbody id="tabla-gastos"></tbody>
       </table>
+      <div style="text-align: center; margin-top: 15px;">
+        <button class="btn btn-delete" onclick="eliminarTodosGastos()">🗑️ Borrar Todos</button>
+      </div>
     </div>
   </section>
 
@@ -307,23 +290,22 @@
         <button type="submit" id="btn-submit">Guardar Gasto</button>
       </form>
     </div>
+    <div class="import-export">
+      <button onclick="exportarExcel()" class="btn btn-success">📊 Exportar a Excel</button>
+      <button onclick="exportarCSV()" class="btn btn-primary">📑 Exportar a CSV</button>
+
+      <h3>📥 Importar gastos</h3>
+      <form id="formImportarExcel" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".xlsx" required>
+        <button type="submit" class="btn btn-success">Importar Excel</button>
+      </form>
+
+      <form id="formImportarCSV" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv" required>
+        <button type="submit" class="btn btn-primary">Importar CSV</button>
+      </form>
+    </div>
   </section>
-
-  <div class="import-export">
-    <button onclick="exportarExcel()" class="btn btn-success">📊 Exportar a Excel</button>
-    <button onclick="exportarCSV()" class="btn btn-primary">📑 Exportar a CSV</button>
-
-    <h3>📥 Importar gastos</h3>
-    <form id="formImportarExcel" enctype="multipart/form-data">
-      <input type="file" name="file" accept=".xlsx" required>
-      <button type="submit" class="btn btn-success">Importar Excel</button>
-    </form>
-
-    <form id="formImportarCSV" enctype="multipart/form-data">
-      <input type="file" name="file" accept=".csv" required>
-      <button type="submit" class="btn btn-primary">Importar CSV</button>
-    </form>
-  </div>
 
   <script>
     const API_URL = "http://localhost:8080/api/v1/gastos";
@@ -375,16 +357,7 @@
           datasets: [{
             label: "Gastos por categoría",
             data: Object.values(categorias),
-            backgroundColor: [
-              "#1abc9c", 
-              "#e67e22", 
-              "#3498db", 
-              "#9b59b6", 
-              "#f1c40f",
-              "#e74c3c",
-              "#2ecc71", 
-              "#34495e"  
-            ]
+            backgroundColor: ["#1abc9c", "#e67e22", "#3498db", "#9b59b6", "#f1c40f", "#e74c3c", "#2ecc71", "#34495e"]
           }]
         }
       });
@@ -404,19 +377,10 @@
       const categoria = document.getElementById("filtro-categoria").value;
       const inicio = document.getElementById("filtro-fecha-inicio").value;
       const fin = document.getElementById("filtro-fecha-fin").value;
-
       let filtrados = gastosGlobal;
-
-      if (categoria) {
-        filtrados = filtrados.filter(g => g.categoria === categoria);
-      }
-      if (inicio) {
-        filtrados = filtrados.filter(g => g.fecha >= inicio);
-      }
-      if (fin) {
-        filtrados = filtrados.filter(g => g.fecha <= fin);
-      }
-
+      if (categoria) filtrados = filtrados.filter(g => g.categoria === categoria);
+      if (inicio) filtrados = filtrados.filter(g => g.fecha >= inicio);
+      if (fin) filtrados = filtrados.filter(g => g.fecha <= fin);
       renderizarGastos(filtrados);
     }
 
@@ -438,11 +402,21 @@
       }
     }
 
+    async function eliminarTodosGastos() {
+      if (confirm("⚠️ ¿Seguro que deseas borrar TODOS los gastos?")) {
+        try {
+          await fetch(`${API_URL}/all`, { method: "DELETE" });
+          await cargarGastos();
+        } catch (error) {
+          console.error("Error eliminando todos los gastos:", error);
+        }
+      }
+    }
+
     function editarGasto(id, descripcion, monto, categoria, fecha) {
       gastoEditando = id;
       document.getElementById("form-title").textContent = "Editar Gasto";
       document.getElementById("btn-submit").textContent = "Actualizar Gasto";
-
       document.getElementById("descripcion").value = descripcion;
       document.getElementById("monto").value = monto;
       document.getElementById("categoria").value = categoria;
@@ -457,7 +431,6 @@
         categoria: document.getElementById("categoria").value,
         fecha: document.getElementById("fecha").value
       };
-
       try {
         if (gastoEditando) {
           await fetch(`${API_URL}/${gastoEditando}`, {
@@ -484,42 +457,27 @@
 
     cargarGastos();
 
-    function exportarExcel() {
-      window.location.href = "http://localhost:8080/api/v1/gastos/export/excel";
-    }
-
-    function exportarCSV() {
-      window.location.href = "http://localhost:8080/api/v1/gastos/export/csv";
-    }
+    function exportarExcel() { window.location.href = "http://localhost:8080/api/v1/gastos/export/excel"; }
+    function exportarCSV() { window.location.href = "http://localhost:8080/api/v1/gastos/export/csv"; }
 
     document.getElementById("formImportarExcel").addEventListener("submit", async function (e) {
       e.preventDefault();
       const formData = new FormData(this);
       try {
-        const response = await fetch("http://localhost:8080/api/v1/gastos/import/excel", {
-          method: "POST",
-          body: formData
-        });
+        const response = await fetch("http://localhost:8080/api/v1/gastos/import/excel", { method: "POST", body: formData });
         alert(await response.text());
-        cargarGastos(); // refresca tabla y gráfica
-      } catch (error) {
-        alert("Error al importar Excel: " + error);
-      }
+        cargarGastos();
+      } catch (error) { alert("Error al importar Excel: " + error); }
     });
 
     document.getElementById("formImportarCSV").addEventListener("submit", async function (e) {
       e.preventDefault();
       const formData = new FormData(this);
       try {
-        const response = await fetch("http://localhost:8080/api/v1/gastos/import/csv", {
-          method: "POST",
-          body: formData
-        });
+        const response = await fetch("http://localhost:8080/api/v1/gastos/import/csv", { method: "POST", body: formData });
         alert(await response.text());
         cargarGastos();
-      } catch (error) {
-        alert("Error al importar CSV: " + error);
-      }
+      } catch (error) { alert("Error al importar CSV: " + error); }
     });
   </script>
 </body>

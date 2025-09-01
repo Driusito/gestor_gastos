@@ -71,6 +71,12 @@ public class GastoController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/all")
+    public ResponseEntity<String> eliminarTodos() {
+        gastoService.deleteAllGastos();
+        return ResponseEntity.ok("✅ Todos los gastos fueron eliminados correctamente");
+    }
+
     @GetMapping("/export/excel")
     public void exportToExcel(HttpServletResponse response) throws IOException {
         response.setContentType("application/octet-stream");

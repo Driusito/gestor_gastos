@@ -53,4 +53,10 @@ public class GastoServiceImpl implements GastoService {
     public Double getTotalPorRango(LocalDate inicio, LocalDate fin) {
         return gastoRepository.getTotalPorRango(inicio, fin);
     }
+
+    @Override
+    // 👉 método para borrar todos
+    public void deleteAllGastos() {
+        gastoRepository.deleteAll();
+    }
 }

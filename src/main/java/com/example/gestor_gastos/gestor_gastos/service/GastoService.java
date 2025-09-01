@@ -22,4 +22,6 @@ public interface GastoService {
 
     Double getTotalPorRango(LocalDate inicio, LocalDate fin);
 
+    void deleteAllGastos();
+
 }
